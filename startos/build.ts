@@ -67,8 +67,6 @@ export class Builder {
     let target: string | null = null
     report({ phase: 'preparing' })
     try {
-      // A reconcile before the container finishes materializing destroys it.
-      await sub.rootfs
       const state = (await stateJson.read().once()) ?? emptyState
       target = await this.locked(async () => {
         await removeIndexes([state.active])
