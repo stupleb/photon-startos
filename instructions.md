@@ -12,7 +12,7 @@ The **Geocoding API** interface is the address your apps use. It has no web page
 
 ## Getting set up
 
-1. Run **Manage Regions** when Photon asks for it. Choose the countries you need, and the languages your apps ask for results in. Each country shows its download size; building needs about six times that in free disk space.
+1. Run **Manage Regions** when Photon asks for it. Choose the countries you need, and the languages your apps ask for results in. Each country shows its download size; building needs about six times that in free disk space, and about 2.5 GB of free memory while it runs.
 2. Start Photon. The **Map Data** health check shows the download and indexing progress. A small country is ready in minutes; a large one, such as France or Germany, takes around an hour.
 3. When **Map Data** shows the countries it is serving, copy the **Geocoding API** address into the app that should use Photon.
 
@@ -30,7 +30,7 @@ GraphHopper publishes new data every week. Run **Refresh Data** to download the 
 
 ### If an update fails
 
-**Map Data** turns red and says why, for example a download that failed or too little free disk space. Photon keeps answering from the data it had. Fix the cause if there is one, then restart Photon to try again.
+**Map Data** turns red and says why, for example a download that failed, too little free disk space, or too little free memory. Photon keeps answering from the data it had. Fix the cause if there is one, such as stopping a service you aren't using while Photon builds, then restart Photon to try again.
 
 ### Connecting apps
 

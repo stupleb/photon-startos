@@ -116,10 +116,11 @@ Two checks; the first exists only once an index has been built.
 - Failure: the last build failed, with the reason. Photon keeps serving the previous index, if it had one. Builds are not retried automatically; restarting the service, running Refresh Data, or saving a different selection starts a new build. Reasons:
   - The download server can't be reached, or a download still fails after three attempts.
   - A download doesn't match its published MD5.
-  - Free space is short. A build needs room for its downloads plus six times the total dump size of the selection, beside the existing index.
+  - Free space is short. A build needs room for its downloads plus six times the total dump size of the selection, beside the existing index, and must leave 6% of the drive free: the embedded OpenSearch node stops writing once the drive is 95% full.
+  - Free memory is short. The import needs about 2.5 GB available (`MemAvailable` in `/proc/meminfo`), checked before the downloads and again before the import starts.
   - The import exits with an error, for example out of memory. The message quotes Photon's last error line.
 
-An import's log can show `Bulk rejected (429); retrying … (attempt 1/8)`: the embedded OpenSearch node pushing back on a batch under the import's 1 GB heap. Photon retries the batch itself, and the import fails only if one batch is refused eight times.
+An import's log can show `Bulk rejected (429); retrying … (attempt 1/8)`: the embedded OpenSearch node pushing back on a batch while the import's heap is nearly full. Photon retries the batch itself, and the import fails only if one batch is refused eight times.
 
 ## Backups and Restore
 
@@ -132,7 +133,7 @@ The backup copies the `startos` volume only, so it holds the region and language
 3. Every change rebuilds the whole index from all selected regions; Photon cannot add a region to an existing index.
 4. The import takes Photon's defaults apart from `-languages`: no `-extra-tags`, `-full-geometries`, `-reverse-only`, country filtering or custom normalisation.
 5. The server takes Photon's defaults: no CORS, no metrics endpoint, no synonyms, no update API.
-6. The Java heaps are fixed, with no setting: 512 MB for the server and 1 GB for an import, which run to about 0.5 GB and 1.4 GB of memory. A build runs its import beside the server.
+6. The Java heaps are fixed, with no setting: 512 MB for the server and 2 GB for an import, which run to about 0.5 GB and 2.5 GB of memory. The import's working set stays near 1 GB whatever the selection's size, so the same heap covers every region. A build runs its import beside the server, starting it once the server's embedded OpenSearch node answers on port 9201 (for up to two minutes), so the import's node takes the next port.
 7. Places outside the selected regions are not found, and a reverse lookup there returns no result.
 
 ---

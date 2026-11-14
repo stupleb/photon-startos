@@ -106,6 +106,7 @@ export class Builder {
         ids,
         pending.map((p) => p.id),
       )
+      await checkMemory(sub)
       for (const { id, md5 } of pending) {
         const date = await download(id, md5, abort, (done, total) =>
           report({ phase: 'downloading', region: id, done, total }),
@@ -114,6 +115,8 @@ export class Builder {
         await save(this.effects, { dumps })
       }
 
+      if (state.active) await serverReady(sub, abort)
+      await checkMemory(sub)
       report({ phase: 'importing', places: 0 })
       await importDumps(sub, abort, target, ids, want.languages, (places) =>
         report({ phase: 'importing', places }),
@@ -246,14 +249,50 @@ const fetchMd5 = async (id: string, signal: AbortSignal) => {
 const checkSpace = async (ids: string[], downloads: string[]) => {
   const bytes = (list: string[]) =>
     list.reduce((sum, id) => sum + regions[id].mb * 1e6, 0)
-  // An index measured up to 5.1 times its compressed download.
-  const need = bytes(downloads) + 6 * bytes(ids)
-  const { bavail, bsize } = await statfs(volume.path)
+  const { bavail, blocks, bsize } = await statfs(volume.path)
+  // An index measured up to 5.1 times its compressed download, and OpenSearch stops writing at 95% full.
+  const need = bytes(downloads) + 6 * bytes(ids) + 0.06 * blocks * bsize
   if (bavail * bsize < need)
     throw new Error(
       i18n(
         'Not enough free space: the update needs about ${need} and ${free} is free',
         { need: formatSize(need), free: formatSize(bavail * bsize) },
+      ),
+    )
+}
+
+// Photon's embedded OpenSearch takes port 9201 unless something already answers there.
+const serverReady = async (
+  sub: SubContainer<typeof manifest>,
+  signal: AbortSignal,
+) => {
+  for (let i = 0; i < 24; i++) {
+    const { exitCode } = await sub.exec([
+      'curl',
+      '-so',
+      '/dev/null',
+      '--max-time',
+      '3',
+      'http://localhost:9201',
+    ])
+    if (exitCode === 0) return
+    await sleep(5_000, undefined, { signal })
+  }
+}
+
+// The import's 2 GB heap plus the JVM's own memory.
+const importMemory = 2.5e9
+
+// The package runtime's /proc/meminfo counts only its own container; a subcontainer's is the server's.
+const checkMemory = async (sub: SubContainer<typeof manifest>) => {
+  const { stdout } = await sub.execFail(['cat', '/proc/meminfo'])
+  const kb = String(stdout).match(/^MemAvailable:\s+(\d+)/m)?.[1]
+  const free = kb ? Number(kb) * 1024 : Infinity
+  if (free < importMemory)
+    throw new Error(
+      i18n(
+        'Not enough free memory: building the index needs about ${need} and ${free} is free',
+        { need: formatSize(importMemory), free: formatSize(free) },
       ),
     )
 }
@@ -347,8 +386,8 @@ const importDumps = async (
   const java = await sub.spawn(
     [
       'java',
-      // Below 1 GB, OpenSearch starts refusing the import's bulk writes.
-      '-Xmx1g',
+      // The import keeps up to 1 GB live; with no more headroom it runs out of heap partway through.
+      '-Xmx2g',
       '-XX:+ExitOnOutOfMemoryError',
       '--enable-native-access=ALL-UNNAMED',
       '-jar',
@@ -373,12 +412,9 @@ const importDumps = async (
   if (signal.aborted) kill()
 
   const log: string[] = []
-  let started = () => {}
-  const output = new Promise<void>((resolve) => (started = resolve))
   const follow = (stream: Readable | null) => {
     if (!stream) return null
     const lines = createInterface({ input: stream }).on('line', (line) => {
-      started()
       console.info(line)
       log.push(line)
       if (log.length > 50) log.shift()
@@ -389,8 +425,6 @@ const importDumps = async (
   }
   const closed = [follow(java.stdout), follow(java.stderr)]
 
-  // Execs starting together in one subcontainer race on its pivot_root directory.
-  await Promise.race([output, javaExit])
   signal.throwIfAborted()
   zstd = await sub.spawn(
     ['zstd', '-dcq', '--', ...ids.map((id) => `/data/dumps/${dumpFile(id)}`)],
