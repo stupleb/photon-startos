@@ -44,6 +44,8 @@ export default {
     39: 'Oceanía',
     40: 'Caribe',
     41: 'Centroamérica',
+    42: 'No hay memoria libre suficiente: crear el índice necesita unos ${need} y quedan ${free} libres',
+    43: 'Crear el índice de búsqueda necesita unos 2,5 GB de memoria libre mientras se ejecuta. Si el servidor no tiene tanta libre, la creación no empieza y la comprobación Datos del mapa lo indica.',
   },
   de_DE: {
     0: 'Geocoding-API',
@@ -88,6 +90,8 @@ export default {
     39: 'Ozeanien',
     40: 'Karibik',
     41: 'Mittelamerika',
+    42: 'Nicht genug freier Arbeitsspeicher: Der Aufbau des Index braucht etwa ${need} und ${free} sind frei',
+    43: 'Der Aufbau des Suchindex braucht während der Ausführung etwa 2,5 GB freien Arbeitsspeicher. Hat der Server nicht so viel frei, startet der Aufbau nicht und die Prüfung Kartendaten zeigt das an.',
   },
   pl_PL: {
     0: 'API geokodowania',
@@ -132,6 +136,8 @@ export default {
     39: 'Oceania',
     40: 'Karaiby',
     41: 'Ameryka Środkowa',
+    42: 'Za mało wolnej pamięci: budowa indeksu wymaga około ${need}, a wolne jest ${free}',
+    43: 'Budowa indeksu wyszukiwania wymaga w trakcie działania około 2,5 GB wolnej pamięci. Jeśli serwer nie ma tyle wolnej, budowa się nie rozpocznie, a kontrola Dane mapy o tym poinformuje.',
   },
   fr_FR: {
     0: 'API de géocodage',
@@ -176,5 +182,7 @@ export default {
     39: 'Océanie',
     40: 'Caraïbes',
     41: 'Amérique centrale',
+    42: 'Mémoire libre insuffisante : la construction de l’index nécessite environ ${need} et ${free} sont libres',
+    43: 'La construction de l’index de recherche nécessite environ 2,5 Go de mémoire libre pendant son exécution. Si le serveur n’en a pas autant de libre, la construction ne démarre pas et la vérification Données cartographiques l’indique.',
   },
 } satisfies Record<string, LangDict>

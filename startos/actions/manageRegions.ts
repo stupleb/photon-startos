@@ -36,7 +36,9 @@ export const manageRegions = sdk.Action.withInput(
     description: i18n(
       'Choose the countries Photon can search and the languages it indexes place names in',
     ),
-    warning: null,
+    warning: i18n(
+      'Building the search index needs about 2.5 GB of free memory while it runs. If the server does not have that much free, the build does not start and the Map Data check says so.',
+    ),
     allowedStatuses: 'any',
     group: null,
     visibility: 'enabled',

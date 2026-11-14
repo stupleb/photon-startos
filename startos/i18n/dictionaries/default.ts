@@ -54,6 +54,12 @@ const dict = {
   Oceania: 39,
   Caribbean: 40,
   'Central America': 41,
+
+  // build.ts
+  'Not enough free memory: building the index needs about ${need} and ${free} is free': 42,
+
+  // actions/manageRegions.ts
+  'Building the search index needs about 2.5 GB of free memory while it runs. If the server does not have that much free, the build does not start and the Map Data check says so.': 43,
 } as const
 
 /**
